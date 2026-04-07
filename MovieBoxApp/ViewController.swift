@@ -9,7 +9,6 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentPickerDe
     let nativePlayer = AVPlayerViewController()
     var currentSubtitleURL: URL?
     
-    // تعريف الزر فقط (بدون أوامر)
     let uploadSubButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("رفع ترجمة 📝", for: .normal)
@@ -49,7 +48,6 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentPickerDe
     }
     
     func setupUploadButton() {
-        // ربط الزر بالأوامر هنا (بعد أن أصبح التطبيق جاهزاً)
         uploadSubButton.addTarget(self, action: #selector(didTapUploadSubtitle), for: .touchUpInside)
         
         view.addSubview(uploadSubButton)
@@ -92,7 +90,6 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentPickerDe
         }
         
         currentSubtitleURL = finalSubtitleURL
-        if let playerItem = nativePlayer.player?.currentItem { applySubtitle(to: playerItem) }
         
         uploadSubButton.setTitle("تم الرفع ✅", for: .normal)
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) { self.uploadSubButton.setTitle("رفع ترجمة 📝", for: .normal) }
@@ -105,25 +102,12 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentPickerDe
         return vttContent
     }
     
-    func applySubtitle(to playerItem: AVPlayerItem) {
-        guard let subtitleURL = currentSubtitleURL else { return }
-        let asset = playerItem.asset
-        let subtitleGroups = asset.mediaSelectionGroups(forMediaCharacteristic: .legible)
-        if let subtitleGroup = subtitleGroups.first {
-            if #available(iOS 16.0, *) {
-                let option = AVMediaSelectionOption(url: subtitleURL)
-                playerItem.select(option, in: subtitleGroup)
-            }
-        }
-    }
-    
     func playVideoNative(urlString: String) {
         guard let url = URL(string: urlString) else { return }
         let playerItem = AVPlayerItem(url: url)
         let player = AVPlayer(playerItem: playerItem)
         nativePlayer.player = player
         nativePlayer.showsPlaybackControls = true
-        if currentSubtitleURL != nil { applySubtitle(to: playerItem) }
         uploadSubButton.isHidden = false
         present(nativePlayer, animated: true) { player.play() }
     }
