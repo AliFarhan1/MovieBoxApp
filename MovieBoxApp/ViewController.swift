@@ -1,7 +1,7 @@
 import UIKit
 import WebKit
 import AVKit
-import MobileCoreServices
+import UniformTypeIdentifiers
 
 class ViewController: UIViewController, WKNavigationDelegate, UIDocumentPickerDelegate {
     
@@ -9,6 +9,7 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentPickerDe
     let nativePlayer = AVPlayerViewController()
     var currentSubtitleURL: URL?
     
+    // تعريف الزر فقط (بدون أوامر)
     let uploadSubButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("رفع ترجمة 📝", for: .normal)
@@ -18,7 +19,6 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentPickerDe
         button.layer.cornerRadius = 20
         button.translatesAutoresizingMaskIntoConstraints = false
         button.isHidden = true
-        button.addTarget(self, action: #selector(didTapUploadSubtitle), for: .touchUpInside)
         return button
     }()
 
@@ -33,6 +33,7 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentPickerDe
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
+        
         let jsStyle = """
         document.documentElement.style.webkitUserSelect='none';
         document.documentElement.style.webkitTouchCallout='none';
@@ -48,6 +49,9 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentPickerDe
     }
     
     func setupUploadButton() {
+        // ربط الزر بالأوامر هنا (بعد أن أصبح التطبيق جاهزاً)
+        uploadSubButton.addTarget(self, action: #selector(didTapUploadSubtitle), for: .touchUpInside)
+        
         view.addSubview(uploadSubButton)
         NSLayoutConstraint.activate([
             uploadSubButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
