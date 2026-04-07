@@ -1,4 +1,4 @@
-name: Build iOS App without Mac
+name: Build Unsigned IPA for SideStore
 
 on:
   push:
@@ -20,48 +20,23 @@ jobs:
       - name: Generate Xcode Project
         run: xcodegen generate
 
-      - name: Setup Certificates and Provisioning Profile
-        env:
-          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
-          PROVISIONING_PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-        run: |
-          CERT_PATH=$RUNNER_TEMP/build_certificate.p12
-          PP_PATH=$RUNNER_TEMP/build_provision.mobileprovision
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-
-          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERT_PATH
-          echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PP_PATH
-
-          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-
-          security import $CERT_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security list-keychain -d user -s $KEYCHAIN_PATH
-
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
-
-      - name: Build IPA
+      - name: Build App (Unsigned)
         run: |
           xcodebuild -project MovieBoxApp.xcodeproj \
           -scheme MovieBoxApp \
           -configuration Release \
-          -destination "generic/platform=iOS" \
-          -archivePath build/MovieBoxApp.xcarchive \
-          archive \
-          CODE_SIGN_IDENTITY="Apple Distribution"
+          -sdk iphoneos \
+          -derivedDataPath build \
+          CODE_SIGNING_ALLOWED=NO
 
-          xcodebuild -exportArchive \
-          -archivePath build/MovieBoxApp.xcarchive \
-          -exportOptionsPlist ExportOptions.plist \
-          -exportPath build/output
+      - name: Package into IPA
+        run: |
+          mkdir -p Payload
+          cp -r build/Build/Products/Release-iphoneos/MovieBoxApp.app Payload/
+          zip -r MovieBox.ipa Payload
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: MovieBox.ipa
-          path: build/output/*.ipa
+          path: MovieBox.ipa
