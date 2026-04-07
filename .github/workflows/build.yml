@@ -33,7 +33,7 @@ jobs:
         run: |
           mkdir -p Payload
           cp -r build/Build/Products/Release-iphoneos/MovieBoxApp.app Payload/
-          zip -r MovieBox.ipa Payload
+          zip -y -r MovieBox.ipa Payload
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
